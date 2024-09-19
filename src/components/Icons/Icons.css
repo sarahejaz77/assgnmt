@@ -1,0 +1,21 @@
+/* Navbar.css */
+
+.status-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.status-icon.done {
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.priority-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.priority-icon.urgent {
+    border-radius: 5px;
+    padding: 1px;
+}

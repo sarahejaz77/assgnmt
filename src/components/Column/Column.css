@@ -1,0 +1,32 @@
+.column-header {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1rem;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-title {
+    margin: 0;
+}
+
+.header-count {
+    margin: 0;
+    color: gray;
+}
+
+.extra-icons {
+    text-align: right;
+}
+
+.ticket-cards {
+    /* Add any specific styles for the ticket cards container here */
+}
+
+.no-tickets {
+    /* Style for when there are no tickets */
+}
