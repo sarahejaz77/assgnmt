@@ -1,9 +1,17 @@
-import React from "react";
+import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 
+const generateColor = (initials) => {
+    let hash = 0;
+    for (let i = 0; i < initials.length; i++) {
+        hash = initials.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 80%)`;
+};
+
 const UserAvatar = ({ initials, userImageUrl }) => {
-    const randomColor = () =>
-        `hsl(${Math.floor(Math.random() * 360)}, 70%, 80%)`;
+    const backgroundColor = useMemo(() => generateColor(initials), [initials]);
 
     const avatarStyle = {
         width: "24px",
@@ -15,7 +23,7 @@ const UserAvatar = ({ initials, userImageUrl }) => {
         fontSize: "14px",
         fontWeight: "bold",
         color: "#333",
-        backgroundColor: randomColor(),
+        backgroundColor,
         overflow: "hidden",
     };
 
@@ -39,8 +47,8 @@ const UserAvatar = ({ initials, userImageUrl }) => {
 };
 
 UserAvatar.propTypes = {
-    initials: PropTypes.string,
+    initials: PropTypes.string.isRequired,
     userImageUrl: PropTypes.string,
 };
 
-export default UserAvatar;
+export default React.memo(UserAvatar);
