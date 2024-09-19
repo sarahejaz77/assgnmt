@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+//api call is in utils.js
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import StatusGroup from "../components/Groups/StatusGroup";
 import UserGroup from "../components/Groups/UserGroup";
 import PriorityGroup from "../components/Groups/PriorityGroup";
 import Navbar from "../components/Navbar/Navbar";
+import Loader from "../components/Loader/loader";
 import {
     fetchData,
     groupTickets,
@@ -11,10 +13,9 @@ import {
 import "./Dashboard.css";
 
 const Dashboard = () => {
-    const [tickets, setTickets] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [groupedTickets, setGroupedTickets] = useState({});
+    const [data, setData] = useState({ tickets: [], users: [] });
     const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [groupBy, setGroupBy] = useState(
         () => localStorage.getItem("groupBy") || "status"
     );
@@ -22,60 +23,62 @@ const Dashboard = () => {
         () => localStorage.getItem("orderBy") || "priority"
     );
 
-    const handleGrouping = useCallback(
-        (method, ticketsData = tickets, usersData = users) => {
-            setGroupBy(method);
-            localStorage.setItem("groupBy", method);
-            const grouped = groupTickets(method, ticketsData, usersData);
-            setGroupedTickets(grouped);
-            applyOrdering(orderBy, grouped, setGroupedTickets);
-        },
-        [tickets, users, orderBy]
-    );
+    const groupedTickets = useMemo(() => {
+        const grouped = groupTickets(groupBy, data.tickets, data.users);
+        return applyOrdering(orderBy, grouped);
+    }, [data, groupBy, orderBy]);
 
-    useEffect(() => {
-        fetchData(setTickets, setUsers, setError, groupBy, handleGrouping);
-    }, [groupBy, handleGrouping]);
+    const handleGrouping = useCallback((method) => {
+        setGroupBy(method);
+        localStorage.setItem("groupBy", method);
+    }, []);
 
-    const handleSorting = (orderType) => {
+    const handleSorting = useCallback((orderType) => {
         setOrderBy(orderType);
         localStorage.setItem("orderBy", orderType);
-        applyOrdering(orderType, groupedTickets, setGroupedTickets);
-    };
+    }, []);
+
+    useEffect(() => {
+        setIsLoading(true);
+        fetchData()
+            .then((fetchedData) => {
+                setData(fetchedData);
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                setError("Failed to fetch data. Please try again later.");
+                setIsLoading(false);
+            });
+    }, []);
+
+    if (error) return <div className="error">{error}</div>;
 
     return (
         <>
+            {isLoading && <Loader />}
             <Navbar
-                apiData={{ tickets, users }}
-                setGroupedData={(method) =>
-                    handleGrouping(method, tickets, users)
-                }
+                apiData={data}
+                setGroupedData={handleGrouping}
                 handleSorting={handleSorting}
             />
             <div className="dashboard-container">
-                {error ? (
-                    <p>{error}</p>
-                ) : (
-                    <>
-                        {groupBy === "status" && (
-                            <StatusGroup
-                                groupedTickets={groupedTickets}
-                                users={users}
-                            />
-                        )}
-                        {groupBy === "user" && (
-                            <UserGroup
-                                groupedTickets={groupedTickets}
-                                users={users}
-                            />
-                        )}
-                        {groupBy === "priority" && (
-                            <PriorityGroup
-                                groupedTickets={groupedTickets}
-                                users={users}
-                            />
-                        )}
-                    </>
+                {groupBy === "status" && (
+                    <StatusGroup
+                        groupedTickets={groupedTickets}
+                        users={data.users}
+                    />
+                )}
+                {groupBy === "user" && (
+                    <UserGroup
+                        groupedTickets={groupedTickets}
+                        users={data.users}
+                    />
+                )}
+                {groupBy === "priority" && (
+                    <PriorityGroup
+                        groupedTickets={groupedTickets}
+                        users={data.users}
+                    />
                 )}
             </div>
         </>
