@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import StatusGroup from "../components/Groups/StatusGroup";
 import UserGroup from "../components/Groups/UserGroup";
 import PriorityGroup from "../components/Groups/PriorityGroup";
@@ -9,7 +9,7 @@ import {
     applyOrdering,
 } from "../components/Utils/Utils";
 import "./Dashboard.css";
-// Using localStorage to preserve user's grouping and ordering across sessions as states to not lose
+
 const Dashboard = () => {
     const [tickets, setTickets] = useState([]);
     const [users, setUsers] = useState([]);
@@ -22,20 +22,20 @@ const Dashboard = () => {
         () => localStorage.getItem("orderBy") || "priority"
     );
 
+    const handleGrouping = useCallback(
+        (method, ticketsData = tickets, usersData = users) => {
+            setGroupBy(method);
+            localStorage.setItem("groupBy", method);
+            const grouped = groupTickets(method, ticketsData, usersData);
+            setGroupedTickets(grouped);
+            applyOrdering(orderBy, grouped, setGroupedTickets);
+        },
+        [tickets, users, orderBy]
+    );
+
     useEffect(() => {
         fetchData(setTickets, setUsers, setError, groupBy, handleGrouping);
     }, [groupBy, handleGrouping]);
-    const handleGrouping = (
-        method,
-        ticketsData = tickets,
-        usersData = users
-    ) => {
-        setGroupBy(method);
-        localStorage.setItem("groupBy", method);
-        const grouped = groupTickets(method, ticketsData, usersData);
-        setGroupedTickets(grouped);
-        applyOrdering(orderBy, grouped, setGroupedTickets);
-    };
 
     const handleSorting = (orderType) => {
         setOrderBy(orderType);
